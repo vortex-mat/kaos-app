@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaos - Ton cerveau externe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #d4f1e3 0%, #fdfdf8 50%, #d4f1e3 100%);
+            color: #0d3b2e;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(77, 175, 125, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(141, 212, 175, 0.15) 0%, transparent 50%);
+            animation: breathe 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-5%, -5%) scale(1.1); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px 30px;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            color: #0d3b2e;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0 rgba(141, 212, 175, 0.3);
+            font-family: Georgia, serif;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            color: #2d7a5f;
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        .capture-section {
+            text-align: center;
+            margin: 60px 0;
+        }
+
+        .capture-btn {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #4caf7d 0%, #2d7a5f 100%);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 20px 60px rgba(13, 59, 46, 0.2);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .capture-btn:hover {
+            transform: scale(1.08) translateY(-8px);
+            box-shadow: 0 30px 80px rgba(13, 59, 46, 0.25);
+        }
+
+        .capture-btn:active {
+            transform: scale(0.95);
+        }
+
+        .capture-btn.recording {
+            animation: pulse 1.5s ease-in-out infinite;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .search-section {
+            margin: 50px 0;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 20px 25px;
+            border: 2px solid #8dd4af;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            background: rgba(253, 253, 248, 0.95);
+            color: #0d3b2e;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4caf7d;
+            box-shadow: 0 15px 50px rgba(45, 122, 95, 0.15);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            color: #0d3b2e;
+            margin: 60px 0 30px;
+            text-align: center;
+            font-family: Georgia, serif;
+        }
+
+        .ideas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .idea-card {
+            background: rgba(253, 253, 248, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(13, 59, 46, 0.12);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(141, 212, 175, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .idea-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4caf7d, #8dd4af);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .idea-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(13, 59, 46, 0.2);
+        }
+
+        .idea-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .idea-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .idea-date {
+            font-size: 0.9rem;
+            color: #2d7a5f;
+            font-weight: 300;
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .star-btn:hover {
+            transform: scale(1.3) rotate(15deg);
+        }
+
+        .idea-content {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #0d3b2e;
+        }
+
+        .ai-section {
+            background: rgba(253, 253, 248, 0.95);
+            border-radius: 30px;
+            padding: 40px;
+            margin: 60px 0;
+            box-shadow: 0 20px 60px rgba(13, 59, 46, 0.15);
+            border: 2px solid #8dd4af;
+        }
+
+        .ai-chat {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 25px;
+            padding-right: 10px;
+        }
+
+        .ai-message {
+            background: #d4f1e3;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 15px;
+            white-space: pre-line;
+        }
+
+        .ai-message.user {
+            background: #4caf7d;
+            color: white;
+            margin-left: 60px;
+        }
+
+        .ai-input-container {
+            display: flex;
+            gap: 12px;
+            position: relative;
+        }
+
+        .ai-input {
+            flex: 1;
+            padding: 16px 60px 16px 22px;
+            border: 2px solid #8dd4af;
+            border-radius: 25px;
+            font-size: 1rem;
+            background: rgba(253, 253, 248, 0.95);
+        }
+
+        .ai-voice-btn {
+            position: absolute;
+            right: 140px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: #8dd4af;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-voice-btn:hover {
+            background: #4caf7d;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .ai-voice-btn.listening {
+            background: #e74c3c;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .ai-send-btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 25px;
+            background: #4caf7d;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .ai-send-btn:hover {
+            background: #2d7a5f;
+            transform: scale(1.05);
+        }
+
+        .rediscovery-section {
+            background: linear-gradient(135deg, #2d7a5f, #4caf7d);
+            border-radius: 30px;
+            padding: 50px;
+            margin: 60px 0;
+            color: white;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(13, 59, 46, 0.2);
+        }
+
+        .rediscovery-btn {
+            background: white;
+            color: #0d3b2e;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-top: 15px;
+        }
+
+        .rediscovery-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-message {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0d3b2e;
+            color: white;
+            padding: 18px 28px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(13, 59, 46, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .status-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #2d7a5f;
+        }
+
+        .empty-state-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .capture-btn {
+                width: 150px;
+                height: 150px;
+            }
+
+            .ideas-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ai-message.user {
+                margin-left: 30px;
+            }
+
+            .ai-voice-btn {
+                right: 110px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Kaos</h1>
+            <p class="tagline">Ton cerveau externe</p>
+        </header>
+
+        <div class="capture-section">
+            <button class="capture-btn" id="captureBtn">🎤 Capturer</button>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput"
+                    placeholder="Recherche une idée..."
+                >
+            </div>
+        </div>
+
+        <h2 class="section-title">Tes idées</h2>
+        <div class="ideas-grid" id="ideasGrid"></div>
+
+        <div class="ai-section">
+            <h2 class="section-title" style="margin-top: 0;">💬 Parle avec ton IA</h2>
+            <div class="ai-chat" id="aiChat">
+                <div class="ai-message">
+                    Salut ! Je suis là pour t'aider à retrouver tes idées. Demande-moi : "Retrouve mon idée sur..." ou "Qu'est-ce que j'ai dit à propos de..."
+                </div>
+            </div>
+            <div class="ai-input-container">
+                <input 
+                    type="text" 
+                    class="ai-input" 
+                    id="aiInput"
+                    placeholder="Pose ta question..."
+                >
+                <button class="ai-voice-btn" id="aiVoiceBtn">🎤</button>
+                <button class="ai-send-btn" id="aiSendBtn">Envoyer</button>
+            </div>
+        </div>
+
+        <div class="rediscovery-section">
+            <h2 style="font-size: 2rem; margin-bottom: 15px; font-family: Georgia, serif;">✨ Redécouvre tes pépites</h2>
+            <p style="opacity: 0.95; font-size: 1.1rem;">L'IA te propose 3 idées anciennes à redécouvrir</p>
+            <button class="rediscovery-btn" id="rediscoveryBtn">Voir mes pépites</button>
+        </div>
+    </div>
+
+    <div class="status-message" id="statusMessage"></div>
+
+    <script>
+        // Storage using localStorage (works everywhere)
+        const Storage = {
+            async saveIdea(idea) {
+                const ideas = await this.getIdeas();
+                ideas.push(idea);
+                try {
+                    localStorage.setItem('kaos-ideas', JSON.stringify(ideas));
+                    return idea;
+                } catch (error) {
+                    console.error('Storage error:', error);
+                    throw error;
+                }
+            },
+
+            async getIdeas() {
+                try {
+                    const data = localStorage.getItem('kaos-ideas');
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    console.log('No ideas yet');
+                    return [];
+                }
+            },
+
+            async updateIdea(id, updates) {
+                const ideas = await this.getIdeas();
+                const index = ideas.findIndex(idea => idea.id === id);
+                if (index !== -1) {
+                    ideas[index] = { ...ideas[index], ...updates };
+                    localStorage.setItem('kaos-ideas', JSON.stringify(ideas));
+                }
+                return ideas[index];
+            },
+
+            async searchIdeas(query) {
+                const ideas = await this.getIdeas();
+                const lowerQuery = query.toLowerCase();
+                return ideas.filter(idea => 
+                    idea.content.toLowerCase().includes(lowerQuery)
+                ).reverse();
+            }
+        };
+
+        // Speech Recognition - single instance reused
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let aiRecognition = null;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'fr-FR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            aiRecognition = new SpeechRecognition();
+            aiRecognition.lang = 'fr-FR';
+            aiRecognition.continuous = false;
+            aiRecognition.interimResults = false;
+        }
+
+        // UI Elements
+        const captureBtn = document.getElementById('captureBtn');
+        const searchInput = document.getElementById('searchInput');
+        const ideasGrid = document.getElementById('ideasGrid');
+        const aiInput = document.getElementById('aiInput');
+        const aiVoiceBtn = document.getElementById('aiVoiceBtn');
+        const aiSendBtn = document.getElementById('aiSendBtn');
+        const aiChat = document.getElementById('aiChat');
+        const rediscoveryBtn = document.getElementById('rediscoveryBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Show status message
+        function showStatus(message) {
+            statusMessage.textContent = message;
+            statusMessage.classList.add('show');
+            setTimeout(() => {
+                statusMessage.classList.remove('show');
+            }, 3500);
+        }
+
+        // Capture idea
+        captureBtn.addEventListener('click', () => {
+            if (!recognition) {
+                alert('La reconnaissance vocale n\'est pas supportée. Utilise Chrome ou Safari sur ordinateur/téléphone.');
+                return;
+            }
+
+            captureBtn.textContent = '🎙️ Écoute...';
+            captureBtn.classList.add('recording');
+
+            recognition.start();
+
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                console.log('✅ Transcription:', transcript);
+                
+                const idea = {
+                    id: Date.now(),
+                    content: transcript,
+                    date: new Date().toISOString(),
+                    starred: false
+                };
+
+                try {
+                    await Storage.saveIdea(idea);
+                    const preview = transcript.length > 50 ? transcript.substring(0, 50) + '...' : transcript;
+                    showStatus('✅ Idée capturée : ' + preview);
+                    captureBtn.textContent = '🎤 Capturer';
+                    captureBtn.classList.remove('recording');
+                    await renderIdeas();
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    showStatus('❌ Erreur de sauvegarde');
+                    captureBtn.textContent = '🎤 Capturer';
+                    captureBtn.classList.remove('recording');
+                }
+            };
+
+            recognition.onerror = (error) => {
+                console.error('Recognition error:', error);
+                showStatus('❌ Erreur : ' + error.error);
+                captureBtn.textContent = '🎤 Capturer';
+                captureBtn.classList.remove('recording');
+            };
+
+            recognition.onend = () => {
+                if (captureBtn.classList.contains('recording')) {
+                    captureBtn.textContent = '🎤 Capturer';
+                    captureBtn.classList.remove('recording');
+                }
+            };
+        });
+
+        // Text search
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                if (e.target.value.trim()) {
+                    await performSearch(e.target.value);
+                } else {
+                    await renderIdeas();
+                }
+            }, 300);
+        });
+
+        async function performSearch(query) {
+            const results = await Storage.searchIdeas(query);
+            await renderIdeas(results);
+        }
+
+        // Render ideas
+        async function renderIdeas(ideas = null) {
+            if (!ideas) {
+                ideas = await Storage.getIdeas();
+            }
+
+            if (ideas.length === 0) {
+                ideasGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🌱</div>
+                        <p style="font-size: 1.3rem; font-style: italic;">Capture ta première idée pour commencer...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            ideasGrid.innerHTML = ideas.reverse().map(idea => {
+                const date = new Date(idea.date);
+                const formattedDate = date.toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="idea-card">
+                        <div class="idea-header">
+                            <span class="idea-date">${formattedDate}</span>
+                            <button class="star-btn" data-id="${idea.id}">
+                                ${idea.starred ? '⭐' : '☆'}
+                            </button>
+                        </div>
+                        <div class="idea-content">${idea.content}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add star button listeners
+            document.querySelectorAll('.star-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    const ideas = await Storage.getIdeas();
+                    const idea = ideas.find(i => i.id === id);
+                    await Storage.updateIdea(id, { starred: !idea.starred });
+                    await renderIdeas();
+                });
+            });
+        }
+
+        // AI Chat voice input
+        aiVoiceBtn.addEventListener('click', () => {
+            if (!aiRecognition) {
+                alert('La reconnaissance vocale n\'est pas supportée.');
+                return;
+            }
+
+            aiVoiceBtn.classList.add('listening');
+            aiVoiceBtn.textContent = '🎙️';
+            
+            // Reuse the same instance
+            aiRecognition.start();
+        });
+
+        // Setup AI recognition handlers once
+        if (aiRecognition) {
+            aiRecognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                aiInput.value = transcript;
+                aiVoiceBtn.classList.remove('listening');
+                aiVoiceBtn.textContent = '🎤';
+                // Auto-send after voice input
+                aiSendBtn.click();
+            };
+
+            aiRecognition.onerror = () => {
+                aiVoiceBtn.classList.remove('listening');
+                aiVoiceBtn.textContent = '🎤';
+                showStatus('❌ Erreur de reconnaissance vocale');
+            };
+
+            aiRecognition.onend = () => {
+                aiVoiceBtn.classList.remove('listening');
+                aiVoiceBtn.textContent = '🎤';
+            };
+        }
+
+        // AI Chat
+        aiSendBtn.addEventListener('click', async () => {
+            const query = aiInput.value.trim();
+            if (!query) return;
+
+            // Add user message
+            const userMessage = document.createElement('div');
+            userMessage.className = 'ai-message user';
+            userMessage.textContent = query;
+            aiChat.appendChild(userMessage);
+            aiInput.value = '';
+
+            // Search ideas
+            const results = await Storage.searchIdeas(query);
+
+            // AI response
+            const aiMessage = document.createElement('div');
+            aiMessage.className = 'ai-message';
+            
+            if (results.length > 0) {
+                aiMessage.textContent = `J'ai trouvé ${results.length} idée(s) :\n\n${results.slice(0, 3).map(idea => `• ${idea.content}`).join('\n\n')}`;
+            } else {
+                aiMessage.textContent = "Je n'ai pas trouvé d'idées correspondantes. Essaie de reformuler ou capture de nouvelles idées !";
+            }
+
+            aiChat.appendChild(aiMessage);
+            aiChat.scrollTop = aiChat.scrollHeight;
+        });
+
+        // AI input enter key
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                aiSendBtn.click();
+            }
+        });
+
+        // Weekly rediscovery
+        rediscoveryBtn.addEventListener('click', async () => {
+            const ideas = await Storage.getIdeas();
+            
+            if (ideas.length === 0) {
+                showStatus('Aucune idée à redécouvrir');
+                return;
+            }
+
+            const oldIdeas = ideas
+                .filter(idea => {
+                    const daysSince = (Date.now() - new Date(idea.date)) / (1000 * 60 * 60 * 24);
+                    return daysSince > 7;
+                })
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3);
+
+            if (oldIdeas.length === 0) {
+                showStatus('Tes idées sont trop récentes ! Reviens dans quelques jours.');
+                return;
+            }
+
+            const aiMessage = document.createElement('div');
+            aiMessage.className = 'ai-message';
+            aiMessage.textContent = `✨ Tes pépites redécouvertes :\n\n${oldIdeas.map((idea, i) => {
+                const daysAgo = Math.floor((Date.now() - new Date(idea.date)) / (1000 * 60 * 60 * 24));
+                return `${i + 1}. ${idea.content}\n(Il y a ${daysAgo} jours)`;
+            }).join('\n\n')}`;
+            
+            aiChat.appendChild(aiMessage);
+            aiChat.scrollTop = aiChat.scrollHeight;
+        });
+
+        // Initialize
+        renderIdeas();
+    </script>
+</body>
+</html>
