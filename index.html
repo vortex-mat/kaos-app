@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaos - Ton cerveau externe</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -352,6 +357,53 @@
             transform: translateY(0);
         }
 
+        .sync-section {
+            background: rgba(253, 253, 248, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 30px 0;
+            border: 2px solid #8dd4af;
+            text-align: center;
+        }
+
+        .sync-id {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+
+        .sync-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background: #4caf7d;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        .sync-btn:hover {
+            background: #2d7a5f;
+            transform: scale(1.05);
+        }
+
+        .sync-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px;
+            border: 2px solid #8dd4af;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -406,6 +458,28 @@
             </div>
         </div>
 
+        <!-- Sync Section -->
+        <div class="sync-section">
+            <h3 style="color: #2d7a5f; margin-bottom: 10px; font-size: 1.1rem;">🔄 Synchronisation multi-appareils</h3>
+            <p style="color: #2d7a5f; font-size: 0.9rem; margin-bottom: 15px;">
+                Pour synchroniser PC et Android, copie ton ID et colle-le sur l'autre appareil
+            </p>
+            <div class="sync-id" id="syncIdDisplay"></div>
+            <button class="sync-btn" id="copyIdBtn">📋 Copier mon ID</button>
+            <button class="sync-btn" id="showSyncInputBtn">🔗 Entrer un nouvel ID</button>
+            <div id="syncInputContainer" style="display: none; margin-top: 15px;">
+                <input 
+                    type="text" 
+                    class="sync-input" 
+                    id="syncInput"
+                    placeholder="Colle l'ID de ton autre appareil ici..."
+                >
+                <br>
+                <button class="sync-btn" id="applySyncBtn">✅ Appliquer et Synchroniser</button>
+                <button class="sync-btn" id="cancelSyncBtn">❌ Annuler</button>
+            </div>
+        </div>
+
         <h2 class="section-title">Tes idées</h2>
         <div class="ideas-grid" id="ideasGrid"></div>
 
@@ -438,13 +512,38 @@
     <div class="status-message" id="statusMessage"></div>
 
     <script>
-        // Storage using localStorage (works everywhere)
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwx2XtMn8eyE0z67arSaZcDPaxxDCO-SM",
+            authDomain: "kaos-app-c15fd.firebaseapp.com",
+            projectId: "kaos-app-c15fd",
+            storageBucket: "kaos-app-c15fd.firebasestorage.app",
+            messagingSenderId: "844386913002",
+            appId: "1:844386913002:web:7b63cd093f6d0b4e6a6593",
+            measurementId: "G-2Z6P4C9CFJ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get or create user ID
+        function getUserId() {
+            let userId = localStorage.getItem('kaos-user-id');
+            if (!userId) {
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('kaos-user-id', userId);
+            }
+            return userId;
+        }
+
+        const USER_ID = getUserId();
+
+        // Storage using Firebase Firestore
         const Storage = {
             async saveIdea(idea) {
-                const ideas = await this.getIdeas();
-                ideas.push(idea);
                 try {
-                    localStorage.setItem('kaos-ideas', JSON.stringify(ideas));
+                    await db.collection('users').doc(USER_ID).collection('ideas').doc(idea.id.toString()).set(idea);
                     return idea;
                 } catch (error) {
                     console.error('Storage error:', error);
@@ -454,22 +553,28 @@
 
             async getIdeas() {
                 try {
-                    const data = localStorage.getItem('kaos-ideas');
-                    return data ? JSON.parse(data) : [];
+                    const snapshot = await db.collection('users').doc(USER_ID).collection('ideas').orderBy('date', 'desc').get();
+                    const ideas = [];
+                    snapshot.forEach(doc => {
+                        ideas.push(doc.data());
+                    });
+                    return ideas;
                 } catch (error) {
-                    console.log('No ideas yet');
+                    console.log('No ideas yet or error:', error);
                     return [];
                 }
             },
 
             async updateIdea(id, updates) {
-                const ideas = await this.getIdeas();
-                const index = ideas.findIndex(idea => idea.id === id);
-                if (index !== -1) {
-                    ideas[index] = { ...ideas[index], ...updates };
-                    localStorage.setItem('kaos-ideas', JSON.stringify(ideas));
+                try {
+                    const ideaRef = db.collection('users').doc(USER_ID).collection('ideas').doc(id.toString());
+                    await ideaRef.update(updates);
+                    const doc = await ideaRef.get();
+                    return doc.data();
+                } catch (error) {
+                    console.error('Update error:', error);
+                    return null;
                 }
-                return ideas[index];
             },
 
             async searchIdeas(query) {
@@ -477,9 +582,24 @@
                 const lowerQuery = query.toLowerCase();
                 return ideas.filter(idea => 
                     idea.content.toLowerCase().includes(lowerQuery)
-                ).reverse();
+                );
+            },
+
+            // Real-time listener
+            onIdeasChange(callback) {
+                return db.collection('users').doc(USER_ID).collection('ideas')
+                    .orderBy('date', 'desc')
+                    .onSnapshot(snapshot => {
+                        const ideas = [];
+                        snapshot.forEach(doc => {
+                            ideas.push(doc.data());
+                        });
+                        callback(ideas);
+                    });
             }
         };
+
+        // Storage using localStorage (works everywhere)
 
         // Speech Recognition - single instance reused
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -508,6 +628,63 @@
         const aiChat = document.getElementById('aiChat');
         const rediscoveryBtn = document.getElementById('rediscoveryBtn');
         const statusMessage = document.getElementById('statusMessage');
+        
+        // Sync UI elements
+        const syncIdDisplay = document.getElementById('syncIdDisplay');
+        const copyIdBtn = document.getElementById('copyIdBtn');
+        const showSyncInputBtn = document.getElementById('showSyncInputBtn');
+        const syncInputContainer = document.getElementById('syncInputContainer');
+        const syncInput = document.getElementById('syncInput');
+        const applySyncBtn = document.getElementById('applySyncBtn');
+        const cancelSyncBtn = document.getElementById('cancelSyncBtn');
+
+        // Display user ID
+        syncIdDisplay.textContent = USER_ID;
+
+        // Copy ID to clipboard
+        copyIdBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(USER_ID);
+                showStatus('✅ ID copié dans le presse-papier !');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = USER_ID;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showStatus('✅ ID copié !');
+            }
+        });
+
+        // Show sync input
+        showSyncInputBtn.addEventListener('click', () => {
+            syncInputContainer.style.display = 'block';
+        });
+
+        // Cancel sync
+        cancelSyncBtn.addEventListener('click', () => {
+            syncInputContainer.style.display = 'none';
+            syncInput.value = '';
+        });
+
+        // Apply new sync ID
+        applySyncBtn.addEventListener('click', () => {
+            const newId = syncInput.value.trim();
+            if (!newId) {
+                showStatus('❌ Entre un ID valide');
+                return;
+            }
+            
+            if (confirm('⚠️ Attention : Cela va remplacer ton ID actuel. Tes idées locales seront remplacées par celles de l\'autre appareil. Continuer ?')) {
+                localStorage.setItem('kaos-user-id', newId);
+                showStatus('✅ ID mis à jour ! Recharge la page...');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        });
 
         // Show status message
         function showStatus(message) {
@@ -547,7 +724,7 @@
                     showStatus('✅ Idée capturée : ' + preview);
                     captureBtn.textContent = '🎤 Capturer';
                     captureBtn.classList.remove('recording');
-                    await renderIdeas();
+                    // Real-time sync will update UI automatically
                 } catch (error) {
                     console.error('Erreur:', error);
                     showStatus('❌ Erreur de sauvegarde');
@@ -605,7 +782,8 @@
                 return;
             }
 
-            ideasGrid.innerHTML = ideas.reverse().map(idea => {
+            // Ideas are already sorted by date desc from Firebase
+            ideasGrid.innerHTML = ideas.map(idea => {
                 const date = new Date(idea.date);
                 const formattedDate = date.toLocaleDateString('fr-FR', {
                     day: 'numeric',
@@ -633,8 +811,10 @@
                     const id = parseInt(e.target.dataset.id);
                     const ideas = await Storage.getIdeas();
                     const idea = ideas.find(i => i.id === id);
-                    await Storage.updateIdea(id, { starred: !idea.starred });
-                    await renderIdeas();
+                    if (idea) {
+                        await Storage.updateIdea(id, { starred: !idea.starred });
+                        // Real-time sync will update UI automatically
+                    }
                 });
             });
         }
@@ -745,8 +925,23 @@
             aiChat.scrollTop = aiChat.scrollHeight;
         });
 
-        // Initialize
-        renderIdeas();
+        // Initialize and setup real-time sync
+        let unsubscribe = null;
+        
+        async function initializeApp() {
+            // Initial load
+            await renderIdeas();
+            
+            // Setup real-time listener
+            unsubscribe = Storage.onIdeasChange(async (ideas) => {
+                await renderIdeas(ideas);
+            });
+            
+            setTimeout(() => showStatus('🌐 Sync cloud activée'), 1000);
+        }
+
+        // Initialize on load
+        initializeApp();
     </script>
 </body>
 </html>
