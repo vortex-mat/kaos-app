@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaos - Ton cerveau externe</title>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK v9 -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
     <style>
         * {
@@ -113,6 +113,31 @@
 
         .search-section {
             margin: 50px 0;
+            position: relative;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 50%;
+            right: -60px;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: #8dd4af;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn:hover {
+            background: #4caf7d;
+            transform: translateY(-50%) scale(1.1);
         }
 
         .search-container {
@@ -364,6 +389,11 @@
             margin: 30px 0;
             border: 2px solid #8dd4af;
             text-align: center;
+            display: none;
+        }
+
+        .sync-section.visible {
+            display: block;
         }
 
         .sync-id {
@@ -433,6 +463,13 @@
             .ai-voice-btn {
                 right: 110px;
             }
+
+            .settings-btn {
+                position: static;
+                transform: none;
+                margin: 20px auto 0;
+                display: block;
+            }
         }
     </style>
 </head>
@@ -456,10 +493,11 @@
                     placeholder="Recherche une idée..."
                 >
             </div>
+            <button class="settings-btn" id="settingsBtn" title="Paramètres de synchronisation">⚙️</button>
         </div>
 
-        <!-- Sync Section -->
-        <div class="sync-section">
+        <!-- Sync Section (hidden by default) -->
+        <div class="sync-section" id="syncSection">
             <h3 style="color: #2d7a5f; margin-bottom: 10px; font-size: 1.1rem;">🔄 Synchronisation multi-appareils</h3>
             <p style="color: #2d7a5f; font-size: 0.9rem; margin-bottom: 15px;">
                 Pour synchroniser PC et Android, copie ton ID et colle-le sur l'autre appareil
@@ -512,8 +550,21 @@
     <div class="status-message" id="statusMessage"></div>
 
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
+        // Wait for Firebase to load
+        window.addEventListener('load', function() {
+            initializeKaos();
+        });
+
+        function initializeKaos() {
+            // Check if Firebase loaded
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase failed to load');
+                alert('Erreur : Impossible de charger Firebase. Vérifie ta connexion internet.');
+                return;
+            }
+
+            // Firebase Configuration
+            const firebaseConfig = {
             apiKey: "AIzaSyAwx2XtMn8eyE0z67arSaZcDPaxxDCO-SM",
             authDomain: "kaos-app-c15fd.firebaseapp.com",
             projectId: "kaos-app-c15fd",
@@ -630,6 +681,7 @@
         const statusMessage = document.getElementById('statusMessage');
         
         // Sync UI elements
+        const syncSection = document.getElementById('syncSection');
         const syncIdDisplay = document.getElementById('syncIdDisplay');
         const copyIdBtn = document.getElementById('copyIdBtn');
         const showSyncInputBtn = document.getElementById('showSyncInputBtn');
@@ -637,6 +689,12 @@
         const syncInput = document.getElementById('syncInput');
         const applySyncBtn = document.getElementById('applySyncBtn');
         const cancelSyncBtn = document.getElementById('cancelSyncBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+
+        // Toggle sync section
+        settingsBtn.addEventListener('click', () => {
+            syncSection.classList.toggle('visible');
+        });
 
         // Display user ID
         syncIdDisplay.textContent = USER_ID;
@@ -942,6 +1000,8 @@
 
         // Initialize on load
         initializeApp();
+        
+        } // End of initializeKaos function
     </script>
 </body>
 </html>
