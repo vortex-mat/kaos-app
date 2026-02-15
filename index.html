@@ -2,12 +2,13 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-awidth, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaos - Ton cerveau externe</title>
     
     <!-- Firebase SDK v9 -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     
     <style>
         * {
@@ -485,6 +486,111 @@
             opacity: 0.5;
         }
 
+        /* Login screen */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #d4f1e3 0%, #fdfdf8 50%, #d4f1e3 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: rgba(253, 253, 248, 0.95);
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(13, 59, 46, 0.2);
+            border: 2px solid #8dd4af;
+            text-align: center;
+            max-width: 450px;
+        }
+
+        .login-title {
+            font-family: Georgia, serif;
+            font-size: 3rem;
+            color: #0d3b2e;
+            margin-bottom: 10px;
+        }
+
+        .login-subtitle {
+            color: #2d7a5f;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+
+        .google-btn {
+            background: white;
+            color: #444;
+            border: 2px solid #ddd;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 0 auto;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .google-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: #4caf7d;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(253, 253, 248, 0.95);
+            padding: 10px 15px;
+            border-radius: 50px;
+            border: 2px solid #8dd4af;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            color: #2d7a5f;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #2d7a5f;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+            transition: transform 0.3s;
+        }
+
+        .logout-btn:hover {
+            transform: scale(1.2);
+        }
+
         @media (max-width: 768px) {
             .capture-btn {
                 width: 150px;
@@ -514,37 +620,39 @@
     </style>
 </head>
 <body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h1 class="login-title">Kaos</h1>
+            <p class="login-subtitle">Ton cerveau externe</p>
+            <p style="color: #2d7a5f; margin-bottom: 30px;">Connecte-toi pour synchroniser tes idées sur tous tes appareils</p>
+            <button class="google-btn" id="googleLoginBtn">
+                <svg width="20" height="20" viewBox="0 0 20 20">
+                    <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
+                    <path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/>
+                    <path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/>
+                    <path fill="#EA4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"/>
+                </svg>
+                Se connecter avec Google
+            </button>
+        </div>
+    </div>
+
+    <!-- User Info (hidden until logged in) -->
+    <div class="user-info" id="userInfo" style="display: none;">
+        <img id="userAvatar" class="user-avatar" src="" alt="">
+        <span id="userName" class="user-name"></span>
+        <button class="logout-btn" id="logoutBtn" title="Se déconnecter">🚪</button>
+    </div>
+
     <div class="container">
         <header>
             <h1>Kaos</h1>
             <p class="tagline">Ton cerveau externe</p>
-            <button class="settings-btn-header" id="settingsBtn" title="Paramètres de synchronisation">⚙️</button>
         </header>
 
         <div class="capture-section">
             <button class="capture-btn" id="captureBtn">🎤 Capturer</button>
-        </div>
-
-        <!-- Sync Section (hidden by default) -->
-        <div class="sync-section" id="syncSection">
-            <h3 style="color: #2d7a5f; margin-bottom: 10px; font-size: 1.1rem;">🔄 Synchronisation multi-appareils</h3>
-            <p style="color: #2d7a5f; font-size: 0.9rem; margin-bottom: 15px;">
-                Pour synchroniser PC et Android, copie ton ID et colle-le sur l'autre appareil
-            </p>
-            <div class="sync-id" id="syncIdDisplay"></div>
-            <button class="sync-btn" id="copyIdBtn">📋 Copier mon ID</button>
-            <button class="sync-btn" id="showSyncInputBtn">🔗 Entrer un nouvel ID</button>
-            <div id="syncInputContainer" style="display: none; margin-top: 15px;">
-                <input 
-                    type="text" 
-                    class="sync-input" 
-                    id="syncInput"
-                    placeholder="Colle l'ID de ton autre appareil ici..."
-                >
-                <br>
-                <button class="sync-btn" id="applySyncBtn">✅ Appliquer et Synchroniser</button>
-                <button class="sync-btn" id="cancelSyncBtn">❌ Annuler</button>
-            </div>
         </div>
 
         <h2 class="section-title">Tes idées</h2>
@@ -606,18 +714,60 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
 
-        // Get or create user ID
-        function getUserId() {
-            let userId = localStorage.getItem('kaos-user-id');
-            if (!userId) {
-                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('kaos-user-id', userId);
+        let USER_ID = null;
+        let currentUser = null;
+
+        // Google Sign In
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const loginOverlay = document.getElementById('loginOverlay');
+        const userInfo = document.getElementById('userInfo');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        googleLoginBtn.addEventListener('click', async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Erreur de connexion : ' + error.message);
             }
-            return userId;
-        }
+        });
 
-        const USER_ID = getUserId();
+        logoutBtn.addEventListener('click', async () => {
+            if (confirm('Se déconnecter ? Tes idées resteront sauvegardées.')) {
+                await auth.signOut();
+            }
+        });
+
+        // Auth state observer - wait for user before initializing
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                USER_ID = 'google_' + user.uid;
+                
+                // Show user info
+                loginOverlay.classList.add('hidden');
+                userInfo.style.display = 'flex';
+                userAvatar.src = user.photoURL || '';
+                userName.textContent = user.displayName || user.email;
+                
+                // Initialize app
+                await initializeMainApp();
+            } else {
+                currentUser = null;
+                USER_ID = null;
+                loginOverlay.classList.remove('hidden');
+                userInfo.style.display = 'none';
+            }
+        });
+
+        async function initializeMainApp() {
+            // Only initialize if user is logged in
+            if (!USER_ID) return;
 
         // Storage using Firebase Firestore
         const Storage = {
@@ -717,70 +867,6 @@
         const aiChat = document.getElementById('aiChat');
         const rediscoveryBtn = document.getElementById('rediscoveryBtn');
         const statusMessage = document.getElementById('statusMessage');
-        
-        // Sync UI elements
-        const syncSection = document.getElementById('syncSection');
-        const syncIdDisplay = document.getElementById('syncIdDisplay');
-        const copyIdBtn = document.getElementById('copyIdBtn');
-        const showSyncInputBtn = document.getElementById('showSyncInputBtn');
-        const syncInputContainer = document.getElementById('syncInputContainer');
-        const syncInput = document.getElementById('syncInput');
-        const applySyncBtn = document.getElementById('applySyncBtn');
-        const cancelSyncBtn = document.getElementById('cancelSyncBtn');
-        const settingsBtn = document.getElementById('settingsBtn');
-
-        // Toggle sync section
-        settingsBtn.addEventListener('click', () => {
-            syncSection.classList.toggle('visible');
-        });
-
-        // Display user ID
-        syncIdDisplay.textContent = USER_ID;
-
-        // Copy ID to clipboard
-        copyIdBtn.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(USER_ID);
-                showStatus('✅ ID copié dans le presse-papier !');
-            } catch (error) {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = USER_ID;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showStatus('✅ ID copié !');
-            }
-        });
-
-        // Show sync input
-        showSyncInputBtn.addEventListener('click', () => {
-            syncInputContainer.style.display = 'block';
-        });
-
-        // Cancel sync
-        cancelSyncBtn.addEventListener('click', () => {
-            syncInputContainer.style.display = 'none';
-            syncInput.value = '';
-        });
-
-        // Apply new sync ID
-        applySyncBtn.addEventListener('click', () => {
-            const newId = syncInput.value.trim();
-            if (!newId) {
-                showStatus('❌ Entre un ID valide');
-                return;
-            }
-            
-            if (confirm('⚠️ Attention : Cela va remplacer ton ID actuel. Tes idées locales seront remplacées par celles de l\'autre appareil. Continuer ?')) {
-                localStorage.setItem('kaos-user-id', newId);
-                showStatus('✅ ID mis à jour ! Recharge la page...');
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            }
-        });
 
         // Show status message
         function showStatus(message) {
@@ -1044,6 +1130,8 @@
 
         // Initialize on load
         initializeApp();
+        
+        } // End of initializeMainApp
         
         } // End of initializeKaos function
     </script>
