@@ -54,6 +54,30 @@
         header {
             text-align: center;
             padding: 40px 20px 30px;
+            position: relative;
+        }
+
+        .settings-btn-header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: #8dd4af;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn-header:hover {
+            background: #4caf7d;
+            transform: scale(1.1);
         }
 
         h1 {
@@ -479,11 +503,12 @@
                 right: 110px;
             }
 
-            .settings-btn {
-                position: static;
-                transform: none;
-                margin: 20px auto 0;
-                display: block;
+            .settings-btn-header {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
             }
         }
     </style>
@@ -493,22 +518,11 @@
         <header>
             <h1>Kaos</h1>
             <p class="tagline">Ton cerveau externe</p>
+            <button class="settings-btn-header" id="settingsBtn" title="Paramètres de synchronisation">⚙️</button>
         </header>
 
         <div class="capture-section">
             <button class="capture-btn" id="captureBtn">🎤 Capturer</button>
-        </div>
-
-        <div class="search-section">
-            <div class="search-container">
-                <input 
-                    type="text" 
-                    class="search-input" 
-                    id="searchInput"
-                    placeholder="Recherche une idée..."
-                >
-            </div>
-            <button class="settings-btn" id="settingsBtn" title="Paramètres de synchronisation">⚙️</button>
         </div>
 
         <!-- Sync Section (hidden by default) -->
@@ -696,7 +710,6 @@
 
         // UI Elements
         const captureBtn = document.getElementById('captureBtn');
-        const searchInput = document.getElementById('searchInput');
         const ideasGrid = document.getElementById('ideasGrid');
         const aiInput = document.getElementById('aiInput');
         const aiVoiceBtn = document.getElementById('aiVoiceBtn');
