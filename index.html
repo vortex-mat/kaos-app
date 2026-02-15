@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-awidth, initial-scale=1.0">
     <title>Kaos - Ton cerveau externe</title>
     
     <!-- Firebase SDK v9 -->
@@ -843,24 +843,6 @@
                 }
             };
         });
-
-        // Text search
-        let searchTimeout;
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(async () => {
-                if (e.target.value.trim()) {
-                    await performSearch(e.target.value);
-                } else {
-                    await renderIdeas();
-                }
-            }, 300);
-        });
-
-        async function performSearch(query) {
-            const results = await Storage.searchIdeas(query);
-            await renderIdeas(results);
-        }
 
         // Render ideas
         async function renderIdeas(ideas = null) {
